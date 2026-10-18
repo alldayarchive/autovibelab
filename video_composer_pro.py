@@ -36,11 +36,8 @@ class VideoComposerPro:
                     loaded_bg_clips.append(clip)
                     current_dur += clip.duration
 
-            # 만약 유효한 클립이 없다면 단색 배경 생성 등으로 예외 방어
             if not loaded_bg_clips:
-                print("⚠️ [VideoComposerPro] 경고: 유효한 배경 클립이 없어 기본 배경을 생성합니다.")
-                # 실제 구동 시 비상용 컬러 clip 생성 가능
-                raise ValueError("유효한 배경 비디오 클립이 없습니다. MediaRetriever를 먼저 실행하세요.")
+                raise ValueError("⚠️ 유효한 배경 비디오 클립이 없습니다. MediaRetriever를 먼저 실행하세요!")
 
             final_bg = concatenate_videoclips(loaded_bg_clips).subclip(0, total_duration)
 
@@ -56,4 +53,44 @@ class VideoComposerPro:
             # 캐릭터 B (오른쪽 아래 배치)
             sunny_path = characters_info.get("sunny", "")
             if sunny_path and os.path.exists(sunny_path):
-                sunny_img
+                sunny_img = ImageClip(sunny_path).set_duration(total_duration).resize(height=300).set_position(("right", "bottom"))
+                layers.append(sunny_img)
+
+            # 4. SRT 자막 렌더링 설정
+            def generator(txt):
+                return TextClip(
+                    txt, 
+                    font='Arial', 
+                    fontsize=40, 
+                    color='white', 
+                    stroke_color='black', 
+                    stroke_width=2,
+                    method='caption',
+                    size=(self.width * 0.8, None)
+                )
+
+            if os.path.exists(srt_path):
+                subtitles = SubtitlesClip(srt_path, generator)
+                subtitles_set = subtitles.set_position(('center', self.height - 220))
+                layers.append(subtitles_set)
+
+            # 5. 최종 합성 및 오디오 주입
+            composite_video = CompositeVideoClip(layers).set_audio(audio_track)
+
+            # 6. MP4 파일로 최종 렌더링
+            print(f"⏳ [VideoComposerPro] MP4 파일 렌더링 중 (시간이 다소 소요될 수 있습니다)...")
+            composite_video.write_videofile(
+                output_path,
+                fps=30,
+                codec="libx264",
+                audio_codec="aac",
+                preset="ultrafast",
+                threads=4
+            )
+
+            print(f"🎉 [VideoComposerPro] 롱폼 영상 완성 완료: {output_path}")
+            return output_path
+
+        except Exception as e:
+            print(f"❌ [VideoComposerPro] 영상 합성 중 에러 발생: {e}")
+            raise e
