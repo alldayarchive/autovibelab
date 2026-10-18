@@ -1,0 +1,6 @@
+streamlit
+edge-tts
+yt-dlp
+moviepy
+asyncio
+requests

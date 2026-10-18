@@ -1,0 +1,9 @@
+# AutoVibeLab Robots.txt
+User-agent: *
+Allow: /
+
+# 만약 비공개 폴더나 시스템 내부 폴더가 있다면 차단 설정 가능
+# Disallow: /private/
+
+# 사이트맵 위치 안내 (검색엔진 봇이 쉽게 찾아가도록 설정)
+Sitemap: https://autovibelab.pages.dev/sitemap.xml
